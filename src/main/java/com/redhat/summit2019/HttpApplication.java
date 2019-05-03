@@ -1,6 +1,7 @@
 package com.redhat.summit2019;
 
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.json.Json;
@@ -37,8 +38,8 @@ public class HttpApplication extends AbstractVerticle {
       webClient = WebClient.create(vertx);
   
       Router apiRouter = Router.router(vertx);
-      apiRouter.get("/api/greeting").handler(this::greeting);
-      apiRouter.post("/tweet").handler(this::tweetHandler);
+      apiRouter.get("/api/greeting").handler(this::greetingHandler);
+      apiRouter.post("/api/tweet").handler(this::tweetHandler);
       apiRouter.get("/*").handler(StaticHandler.create());
   
   
@@ -46,8 +47,8 @@ public class HttpApplication extends AbstractVerticle {
         if (ar.succeeded()) {
           vertx
             .createHttpServer()
-            .requestHandler(apiRouter::accept)
-            .listen(8080, result -> {
+            .requestHandler(apiRouter)
+            .listen(config().getInteger("http.port", 8080), result -> {
               if (result.succeeded()) {
                 startFuture.complete();
               } else {
@@ -101,7 +102,7 @@ public class HttpApplication extends AbstractVerticle {
   }
 
 
-  private void greeting(RoutingContext rc) {
+  private void greetingHandler(RoutingContext rc) {
     String name = rc.request().getParam("name");
     if (name == null) {
       name = "World";
